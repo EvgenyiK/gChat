@@ -7,14 +7,13 @@ message User {
     string name = 2;
 }
 
-message Message{
+message Message {
     string id = 1;
-    User user = 2;
-    string message = 3;
-    string timestamp = 4;
+    string content = 2;
+    string timestamp = 3;
 }
 
-message Connect{
+message Connect {
     User user = 1;
     bool active = 2;
 }

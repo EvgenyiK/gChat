@@ -9,54 +9,54 @@ import (
 
 	"github.com/EvgenyiK/gChat/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 )
 
 
-type Connection struct{
+
+type Connection struct {
 	stream proto.Broadcast_CreateStreamServer
-	id string
+	id     string
 	active bool
-	err chan error
+	error  chan error
 }
 
-type Server struct{
+type Server struct {
 	Connection []*Connection
 }
 
-
 //CreateStream Создание соединения и добавление его в список соединений
 func (s *Server) CreateStream(pconn *proto.Connect, stream proto.Broadcast_CreateStreamServer) error {
-	conn:= &Connection{
+	conn := &Connection{
 		stream: stream,
-		id: pconn.User.Id,
+		id:     pconn.User.Id,
 		active: true,
-		err: make(chan error),
+		error:  make(chan error),
 	}
 
 	s.Connection = append(s.Connection, conn)
-	return <-conn.err
+	return <-conn.error
 }
 
 //BroadcastMessage  отправляет сообщения всем активным пользователям
 func (s *Server) BroadcastMessage(ctx context.Context, msg *proto.Message) (*proto.Close, error) {
-	wait:= sync.WaitGroup{}
-	done:= make(chan int)
+	wait := sync.WaitGroup{}
+	done := make(chan int)
 
 	for _, conn := range s.Connection {
-		log.Println(conn.id)
 		wait.Add(1)
 
 		go func(msg *proto.Message, conn *Connection) {
 			defer wait.Done()
 
 			if conn.active {
-				err:= conn.stream.Send(msg)
-				log.Printf("Sending message %v to user %v", msg.Id, conn.id)
+				err := conn.stream.Send(msg)
+				grpclog.Info("Sending message to: ", conn.id)
 				if err != nil {
-					log.Printf("Error with stream %v. Error: %v",  conn.stream, err)
+					grpclog.Errorf("Error with stream %v. Error: %v", conn.stream, err)
 				}
 				conn.active = false
-				conn.err <- err
+				conn.error <- err
 			}
 		}(msg, conn)
 	}
@@ -70,15 +70,18 @@ func (s *Server) BroadcastMessage(ctx context.Context, msg *proto.Message) (*pro
 	return &proto.Close{}, nil
 }
 
-func main()  {
+func main() {
 	var connections []*Connection
-	server:= &Server{connections}
-	grpcServer:= grpc.NewServer()
-	listener,err:= net.Listen("tcp", ":8080")
+
+	server := &Server{connections}
+
+	grpcServer := grpc.NewServer()
+	listener, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		log.Fatalf("error creating the server %v", err)
 	}
 	fmt.Println("Starting server at port:8080")
+
 
 	proto.RegisterBroadcastServer(grpcServer, server)
 	grpcServer.Serve(listener)
