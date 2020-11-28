@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package proto;
+
+message User {
+    string id = 1;
+    string displayName = 2;
+}
+
+message Message{
+    string id = 1;
+    User user = 2;
+    string message = 3;
+    string timestamp = 4;
+}
+
+message Connect{
+    User user = 1;
+    bool active = 2;
+}
+
+message Close{}
+
+//CreateStream инициализирование подключения к Broadcast Server
+//BroadcastMessage используется для отправки сообщения всем пользователям.
+service Broadcast{
+    rpc CreateStream (Connect) returns (stream Message);
+    rpc BroadcastMessage(Message) returns (Close);
+}
