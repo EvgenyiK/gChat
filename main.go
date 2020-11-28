@@ -9,10 +9,8 @@ import (
 
 	"github.com/EvgenyiK/gChat/proto"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
+	
 )
-
-
 
 type Connection struct {
 	stream proto.Broadcast_CreateStreamServer
@@ -51,9 +49,9 @@ func (s *Server) BroadcastMessage(ctx context.Context, msg *proto.Message) (*pro
 
 			if conn.active {
 				err := conn.stream.Send(msg)
-				grpclog.Info("Sending message to: ", conn.id)
+				log.Println("Sending message to: ", conn.stream)
 				if err != nil {
-					grpclog.Errorf("Error with stream %v. Error: %v", conn.stream, err)
+					log.Printf("Error with stream %v. Error: %v", conn.stream, err)
 				}
 				conn.active = false
 				conn.error <- err
@@ -81,7 +79,6 @@ func main() {
 		log.Fatalf("error creating the server %v", err)
 	}
 	fmt.Println("Starting server at port:8080")
-
 
 	proto.RegisterBroadcastServer(grpcServer, server)
 	grpcServer.Serve(listener)

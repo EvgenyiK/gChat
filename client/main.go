@@ -50,6 +50,7 @@ func connect(user *proto.User) error {
 
 			fmt.Printf("%v : %s/n", msg.Id, msg.Content)
 		}
+
 	}(stream)
 
 	return streamerror
