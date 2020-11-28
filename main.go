@@ -39,7 +39,7 @@ func (s *Server) CreateStream(pconn *proto.Connect, stream proto.Broadcast_Creat
 
 //BroadcastMessage  отправляет сообщения всем активным пользователям
 func (s *Server) BroadcastMessage(ctx context.Context, msg *proto.Message) (*proto.Close, error) {
-	wait:= &sync.WaitGroup{}
+	wait:= sync.WaitGroup{}
 	done:= make(chan int)
 
 	for _, conn := range s.Connection {
