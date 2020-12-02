@@ -52,9 +52,9 @@ func (s *Server) BroadcastMessage(ctx context.Context, msg *proto.Message) (*pro
 				log.Println("Sending message to: ", conn.stream)
 				if err != nil {
 					log.Printf("Error with stream %v. Error: %v", conn.stream, err)
+					conn.active = false
+					conn.error <- err
 				}
-				conn.active = false
-				conn.error <- err
 			}
 		}(msg, conn)
 	}
